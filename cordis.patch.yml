@@ -1,0 +1,6 @@
+# Mount the plugin into the profile when this package is listed in
+# `dsh.profile.bundles`. Configuration lives under the same id in the profile's
+# own cordis.patch.yml when a value differs from the plugin defaults.
+- insert:
+    - id: cyberself
+      name: cyberself
