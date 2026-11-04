@@ -43,24 +43,36 @@ pnpm build
 | --- | --- | --- |
 | 怎么装 | DSH Desktop 的插件市场 | `dsh plugin add` |
 | 工作区 | 桌面应用里的全部工作区，挑需要的设为资料库 | 该 profile 下的工作区 |
-| 适合 | 日常使用 | 本地改代码调试、演示 |
+| 其他工具 | 全部保留 | 可以关掉，只留资料库 |
+| 适合 | 日常使用 | 只读资料库的专用入口、本地改代码调试 |
 
-两种方式可以同时存在，各自的资料库互不影响（资料库跟着工作区走，不跟着 profile 走）。
+两个 profile 可以同时存在。资料库跟着工作区目录走，两个 profile 打开同一个工作区时用的是同一个库，不需要重新导入。
 
 ### 装进 DSH Desktop
 
 桌面应用的 `desktop` profile 由应用自身管理，命令行的 `dsh plugin` 写不进去，会报 `profile "desktop" is managed exclusively by the Electron application`。在 DSH Desktop 的插件市场里搜索 `cyber-self` 安装。
 
-市场里还没有的时候，按下面的办法装一个命令行 profile。
+也可以自己建一个命令行 profile，见下一节。
 
 ### 装进自己建的 profile
 
-新建一个名为 `kb` 的 profile，只装 CyberSelf：
+命令行 profile 有两种用法：市场还没收录时的安装方式，以及一个只让模型看到资料库的入口。后一种要在第 3 步关掉读文件、联网、执行命令。
+
+#### 1. 新建
 
 ```bash
 dsh --profile kb --from-default-profile web
-dsh plugin --profile kb add link:"$PWD"
 ```
+
+`--from-default-profile` 只接受 DSH 自带的模板（`web`、`headless`、`tui`）。`desktop` 由桌面应用自己管理，不能拿来当模板，也不能用 `dsh plugin` 往里写。
+
+#### 2. 装插件
+
+```bash
+dsh plugin --profile kb add github:MrLsss/cyber-self
+```
+
+改本地代码时在项目根执行 `dsh plugin --profile kb add link:"$PWD"`，改完 `pnpm build` 再重启。
 
 然后检查 `~/.dsh/profiles/kb/package.json`，`dsh.profile.bundles` 里要有 `cyberself`：
 
@@ -76,13 +88,52 @@ dsh plugin --profile kb add link:"$PWD"
 }
 ```
 
-启动：
+#### 3. 关掉不需要的工具
+
+编辑 `~/.dsh/profiles/kb/cordis.patch.yml`，按 id 把对应条目设为 `disabled: true`：
+
+```yaml
+- id: tool-bash
+  disabled: true
+- id: tool-pwsh
+  disabled: true
+- id: tool-fs
+  disabled: true
+- id: tool-fs-search
+  disabled: true
+- id: tool-web
+  disabled: true
+- id: tool-subagent
+  disabled: true
+- id: tool-workflow
+  disabled: true
+```
+
+| id | 关掉的工具 | 作用 |
+| --- | --- | --- |
+| `tool-bash` | `bash`、后台任务 | 执行命令 |
+| `tool-pwsh` | `pwsh` | 在 Windows 上执行命令 |
+| `tool-fs` | `read`、`write`、`edit` | 读写工作区里的文件 |
+| `tool-fs-search` | `glob`、`grep` | 按文件名或内容搜索文件 |
+| `tool-web` | `web_search`、`web_fetch` | 联网搜索和抓取网页 |
+| `tool-subagent` | 子任务相关工具 | 另起一个助手干活 |
+| `tool-workflow` | 编排脚本 | 批量调度多个子任务 |
+
+`tool-todo`、`tool-goal`、`tool-skill`、`tool-result-pruner` 不影响资料库的封闭性，可以留着。插件自己的 `cyberself_search`、`cyberself_read` 不受影响，资料库的读取走插件自己的工具。
+
+#### 4. 重启
 
 ```bash
 dsh --profile kb
 ```
 
-改 Host 代码要重启 profile，改客户端代码要重新 `pnpm build` 再刷新页面。
+patch 层在启动时合成，改完 `cordis.patch.yml` 必须重启才生效。改 Host 代码也要重启；改客户端代码要重新 `pnpm build` 再刷新页面。
+
+#### 为什么关掉工具
+
+「回答范围」里的「仅资料库」是提示词约束，模型手里仍然有 `bash`、`read`、`web_search`，只是被要求别用；在 profile 里关掉之后，这些工具根本不会出现在模型面前，问答只能围着资料库进行。
+
+桌面应用里的日常对话不受影响，两边用的还是同一批工作区和同一份资料库。
 
 ## 使用四步
 
@@ -148,16 +199,7 @@ dsh --profile kb
 - **仅资料库**：只依据检索到的原文回答，资料里没有就说明缺哪类资料。
 - **允许补充**：先查资料库，没覆盖的部分可以补充，补充内容单独成句并注明「（资料库外）」。
 
-这是对模型的指令约束。要让模型完全不能联网、读文件、执行命令，在 profile 的 `cordis.patch.yml` 里禁用对应工具：
-
-```yaml
-- id: tool-bash
-  disabled: true
-- id: tool-fs
-  disabled: true
-- id: tool-web
-  disabled: true
-```
+这是对模型的指令约束，模型手里仍然有其他工具。要让它在能力上就没有这些工具，按[装进自己建的 profile](#装进自己建的-profile) 的第 3 步关掉。
 
 ## 设置
 
