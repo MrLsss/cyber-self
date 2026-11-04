@@ -247,7 +247,7 @@ export function LibrarySettings(props: SettingsSectionProps): ReactElement {
             <span>每块字符上限（0 表示整块送进模型）</span>
             <Input value={maxChars} onChange={(event) => { setMaxChars(event.currentTarget.value) }} />
           </label>
-          <label className="cs-field">
+          <label className="cs-field cs-field-wide">
             <span>表格分块去重</span>
             <SegmentedControl
               id="cs-settings-dedupe"
@@ -255,6 +255,7 @@ export function LibrarySettings(props: SettingsSectionProps): ReactElement {
               options={DEDUPE_OPTIONS}
               onChange={(next) => { setDedupeNumbers(next === 'on') }}
               label="表格分块去重"
+              className="cs-segments"
             />
           </label>
         </div>
@@ -280,7 +281,6 @@ export function LibrarySettings(props: SettingsSectionProps): ReactElement {
             <div key={workspace.id} className="cs-doc">
               <span className="cs-doc-main">
                 <span className="cs-name">{workspace.title}</span>
-                <span className="cs-muted">{workspace.path}</span>
               </span>
               <SegmentedControl
                 id={`cs-settings-scope-${workspace.id}`}

@@ -51,6 +51,7 @@ const SHEET = `
 .cs-progress-bar { height: 100%; background: var(--dsw-alias-accent, #4a6cf7); }
 .cs-list { display: flex; flex-direction: column; gap: 2px; }
 .cs-doc { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.cs-doc > button { flex: none; white-space: nowrap; }
 .cs-doc-main {
   display: flex;
   flex-direction: column;
@@ -82,6 +83,8 @@ const SHEET = `
 .cs-settings-subtitle { margin: 0; font-size: 13px; font-weight: 600; }
 .cs-settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 .cs-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.cs-field-wide { grid-column: 1 / -1; }
+.cs-field > .cs-segments { align-self: flex-start; }
 .cs-settings-actions { display: flex; align-items: center; gap: 10px; }
 .cs-confirm {
   padding: 8px;
