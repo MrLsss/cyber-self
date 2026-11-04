@@ -41,7 +41,7 @@ function formatChunk(chunk: { ordinal: number; page: number; heading: string; te
 export function createTools(service: CyberSelf) {
   return [
     defineTool({
-      name: 'knowledge_search',
+      name: 'cyberself_search',
       description: '在当前工作区的个人知识库里检索资料片段。回答用户关于资料的问题之前先用它取得原文依据，引用时使用返回的编号。',
       parameters: {
         query: {
@@ -115,7 +115,7 @@ export function createTools(service: CyberSelf) {
     }),
 
     defineTool({
-      name: 'knowledge_documents',
+      name: 'cyberself_documents',
       description: '列出当前工作区个人知识库里的全部资料，包含标题、类型、段落数与向量化进度。',
       parameters: {},
       output: {
@@ -174,10 +174,10 @@ export function createTools(service: CyberSelf) {
     }),
 
     defineTool({
-      name: 'knowledge_read',
+      name: 'cyberself_read',
       description: '按文档 id 读取资料原文，用于核对检索片段之外的上下文。',
       parameters: {
-        documentId: { type: 'string', required: true, description: '资料 id，来自 knowledge_documents 或 knowledge_search 的结果。' },
+        documentId: { type: 'string', required: true, description: '资料 id，来自 cyberself_documents 或 cyberself_search 的结果。' },
         offset: { type: 'integer', description: '从第几段开始，默认 0。' },
         limit: { type: 'integer', description: '读取多少段，默认 20，最多 100。' },
       },

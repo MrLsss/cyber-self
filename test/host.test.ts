@@ -71,7 +71,7 @@ test('apply mounts the full host surface without any configuration', async () =>
     '/cyberself/api/storage',
     '/cyberself/api/workspaces',
   ])
-  assert.deepEqual(tools.sort(), ['knowledge_documents', 'knowledge_read', 'knowledge_search'])
+  assert.deepEqual(tools.sort(), ['cyberself_documents', 'cyberself_read', 'cyberself_search'])
 
   const server = createServer((req, res) => {
     const route = routes.find((entry) => entry.kind === 'exact' && entry.path === (req.url ?? ''))

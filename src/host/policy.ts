@@ -33,7 +33,7 @@ export interface LibraryLookup {
 /** Rules for a library that answers from its own documents alone. */
 const LIBRARY_RULES = [
   '当前工作区是一个个人资料库，回答必须遵守下面的规则：',
-  '1. 回答资料相关的问题之前，先用 knowledge_search 取得原文依据；问题涉及具体条款、数字或名称时，再用 knowledge_read 核对上下文。',
+  '1. 回答资料相关的问题之前，先用 cyberself_search 取得原文依据；问题涉及具体条款、数字或名称时，再用 cyberself_read 核对上下文。',
   '2. 只能依据工具返回的资料原文回答。不要用其他工具去读取资料库以外的内容，不要补充资料以外的知识，不要凭印象推断或猜测。',
   '3. 每条论断后面用方括号标注依据编号，例如 [1]，编号只能取自本次工具返回的结果。',
   '4. 资料库里没有的内容，直接说明缺少这部分资料，并说明需要补充哪一类资料。',
@@ -43,7 +43,7 @@ const LIBRARY_RULES = [
 /** Rules for a library that allows material from outside it as a supplement. */
 const OPEN_RULES = [
   '当前工作区是一个个人资料库，回答遵守下面的规则：',
-  '1. 回答资料相关的问题之前，先用 knowledge_search 取得原文依据；问题涉及具体条款、数字或名称时，再用 knowledge_read 核对上下文。',
+  '1. 回答资料相关的问题之前，先用 cyberself_search 取得原文依据；问题涉及具体条款、数字或名称时，再用 cyberself_read 核对上下文。',
   '2. 资料库里有依据时，以资料原文为准。',
   '3. 资料库没有覆盖的部分，可以用其他方式查找或用自己的知识补充，补充的内容单独成句并注明"（资料库外）"，不要和带编号的依据混在一起。',
   '4. 来自资料库的论断后面用方括号标注依据编号，例如 [1]，编号只能取自本次工具返回的结果。',

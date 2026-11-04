@@ -61,7 +61,7 @@ test('a library workspace gains the answering rules', async () => {
   assert.equal(texts.length, 1)
   const text = texts[0] ?? ''
   assert.match(text, /知识库|资料库/u)
-  assert.match(text, /knowledge_search/u)
+  assert.match(text, /cyberself_search/u)
   assert.match(text, /资料库现状：0 份资料/u)
   if (decision.kind === 'enter') {
     const source = decision.messages[0]?.source

@@ -34,6 +34,11 @@ export function isSupported(name: string): boolean {
   return SUPPORTED_EXTENSIONS.includes(extname(name).replace(/^\./u, '').toLowerCase())
 }
 
+/** True when the file is read by the vision model rather than by a text parser. */
+export function isImageName(name: string): boolean {
+  return IMAGE_MIME[extname(name).replace(/^\./u, '').toLowerCase()] !== undefined
+}
+
 function baseTitle(name: string): string {
   const base = basename(name)
   const dot = base.lastIndexOf('.')

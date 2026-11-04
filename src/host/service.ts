@@ -23,6 +23,7 @@ import {
   type LibraryView,
   type MarkView,
   type PurgeView,
+  type ScanView,
   type SearchView,
   type SettingsView,
   type StorageView,
@@ -49,7 +50,7 @@ import {
   reclaimSpace,
 } from './kb/store.ts'
 import { measureLibrary } from './kb/usage.ts'
-import { SUPPORTED_EXTENSIONS, isSupported } from './parse/index.ts'
+import { SUPPORTED_EXTENSIONS, isImageName, isSupported } from './parse/index.ts'
 import type { VisionTranscriber } from './parse/types.ts'
 import type { LibrarySummary } from './policy.ts'
 import {
@@ -447,13 +448,18 @@ export class CyberSelf {
     return view
   }
 
-  /** List importable files under a Host directory, so the UI can import folder by folder. */
-  async scan(dirInput: string, path: string): Promise<{ files: string[]; skipped: string[] }> {
+  /**
+   * List importable files under a Host directory, so the UI can show what an
+   * import would cost before the model starts working through it.
+   */
+  async scan(dirInput: string, path: string): Promise<ScanView> {
     this.requireLibrary(dirInput)
     const root = resolve(path)
     if (!await isDirectory(root)) throw new CyberSelfError(404, `目录不存在：${root}`)
     const files: string[] = []
     const skipped: string[] = []
+    let totalBytes = 0
+    let images = 0
     const walk = async (current: string): Promise<void> => {
       const entries = await readdir(current, { withFileTypes: true })
       for (const entry of entries) {
@@ -466,13 +472,18 @@ export class CyberSelf {
         }
         if (!entry.isFile()) continue
         const extension = entry.name.slice(entry.name.lastIndexOf('.') + 1).toLowerCase()
-        if (SUPPORTED_EXTENSIONS.includes(extension)) files.push(full)
-        else skipped.push(full)
+        if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+          skipped.push(full)
+          continue
+        }
+        files.push(full)
+        totalBytes += (await stat(full)).size
+        if (isImageName(entry.name)) images += 1
       }
     }
     await walk(root)
     files.sort()
-    return { files, skipped }
+    return { files, skipped, totalBytes, images }
   }
 
   /** Remove a document and its chunks, then return the freed disk space. */
@@ -599,15 +610,21 @@ export class CyberSelf {
   async saveSettings(patch: StoredEmbeddingSettings): Promise<SettingsView> {
     if (Object.keys(patch).length > 0) {
       const previous = this.embeddingSettings()
+      const next = { ...previous, ...patch }
+      const rebuilt = next.model !== previous.model
+        || next.maxChars !== previous.maxChars
+        || next.dedupeNumbers !== previous.dedupeNumbers
+      if (rebuilt) {
+        const probe = await createOllamaEmbedder(next).probe()
+        if (!probe.ready) {
+          throw new CyberSelfError(409, `设置没有保存：改完要重建全部向量，而新的嵌入服务现在不可用（${probe.message ?? '探测失败'}）`)
+        }
+      }
       this.storedEmbedding = this.deps.writeEmbeddingSettings(patch)
       this.health = null
-      const current = this.embeddingSettings()
       for (const dir of [...this.jobs.keys()]) {
         if (this.jobs.get(dir)?.running !== true) this.jobs.delete(dir)
       }
-      const rebuilt = current.model !== previous.model
-        || current.maxChars !== previous.maxChars
-        || current.dedupeNumbers !== previous.dedupeNumbers
       if (rebuilt) {
         for (const [dir, handle] of this.handles) {
           clearEmbeddings(handle)

@@ -27,7 +27,7 @@ A、B、C、D 可以是同一个人的多重身份。身份之间互相隔离，
 
 ## 安装
 
-需要 Node.js 22、pnpm、DSH 0.2.1-rc 系列。向量化用本机的 Ollama；扫描件和图片转写需要一个能看图的对话模型。
+需要 Node.js 22.5 以上（资料库用 `node:sqlite`）、pnpm、DSH 0.2.1-rc 系列。向量化用本机的 Ollama；扫描件和图片转写需要一个能看图的对话模型。
 
 ```bash
 ollama pull bge-m3
@@ -35,43 +35,25 @@ pnpm install
 pnpm build
 ```
 
-构建产物是 `lib/index.js`（Host 侧）和 `lib/client.js`（浏览器侧）。
+构建产物是 `lib/index.js`（Host 侧）和 `lib/client.js`（浏览器侧），仓库里带着构建好的文件，从 GitHub 安装时不需要再构建。
 
-### 两个 profile 的区别
+### 两种安装方式
 
-| | desktop（默认） | kb（独立专用） |
+| | 应用内（desktop） | 命令行（自己建的 profile） |
 | --- | --- | --- |
-| 定位 | 日常使用的默认 profile，插件和其他插件共存 | 单独建一个 profile，只跑 CyberSelf，环境干净 |
-| 工作区来源 | 已有的全部工作区，挑需要的设为资料库 | 只放作为身份的工作区，界面只显示资料库 |
-| 适合 | 已经常用 DSH Desktop，想顺手给某些工作区加资料库 | 想严格区分"身份管理"和日常开发，或做演示 |
+| 怎么装 | DSH Desktop 的插件市场 | `dsh plugin add` |
+| 工作区 | 桌面应用里的全部工作区，挑需要的设为资料库 | 该 profile 下的工作区 |
+| 适合 | 日常使用 | 本地改代码调试、演示 |
 
 两种方式可以同时存在，各自的资料库互不影响（资料库跟着工作区走，不跟着 profile 走）。
 
-### 装进 desktop profile（默认）
+### 装进 DSH Desktop
 
-Desktop 默认使用的 profile 就是 `desktop`。把插件加进去：
+桌面应用的 `desktop` profile 由应用自身管理，命令行的 `dsh plugin` 写不进去，会报 `profile "desktop" is managed exclusively by the Electron application`。在 DSH Desktop 的插件市场里搜索 `cyber-self` 安装。
 
-```bash
-dsh plugin --profile desktop add link:"$PWD"
-```
+市场里还没有的时候，按下面的办法装一个命令行 profile。
 
-然后编辑 `~/.dsh/profiles/desktop/package.json`，把 `cyberself` 加进 `dsh.profile.bundles`：
-
-```json
-"dsh": {
-  "profile": {
-    "bundles": [
-      "@deepseek-ai/dsh-base",
-      "@deepseek-ai/dsh-web-app",
-      "cyberself"
-    ]
-  }
-}
-```
-
-打开 DSH Desktop（默认就是 desktop profile）即可使用。
-
-### 装进 kb profile（独立专用）
+### 装进自己建的 profile
 
 新建一个名为 `kb` 的 profile，只装 CyberSelf：
 
@@ -80,7 +62,7 @@ dsh --profile kb --from-default-profile web
 dsh plugin --profile kb add link:"$PWD"
 ```
 
-然后编辑 `~/.dsh/profiles/kb/package.json`，把 `cyberself` 加进 `dsh.profile.bundles`：
+然后检查 `~/.dsh/profiles/kb/package.json`，`dsh.profile.bundles` 里要有 `cyberself`：
 
 ```json
 "dsh": {
@@ -100,8 +82,6 @@ dsh plugin --profile kb add link:"$PWD"
 dsh --profile kb
 ```
 
-Desktop 里切换到 `kb` profile 即可。
-
 改 Host 代码要重启 profile，改客户端代码要重新 `pnpm build` 再刷新页面。
 
 ## 使用四步
@@ -119,7 +99,7 @@ Desktop 里切换到 `kb` profile 即可。
 | 图片、扫描件 | `.png` `.jpg` `.jpeg` `.webp` `.gif`（视觉模型转写） |
 | 聊天记录 | 从聊天软件导出为 txt、Markdown 或 html 后导入 |
 
-单个文件最大 64 MB。目录导入会递归扫描，跳过隐藏目录和 `node_modules`、`.git`、`.cyberself`、`dist`、`build`、`lib`。`.doc` 不支持，先另存为 `.docx` 或 PDF。
+单个文件最大 64 MB。目录导入会先递归扫描，列出文件数量、总体积、其中多少张图片要交给视觉模型，确认之后才开始导入；扫描时跳过隐藏目录和 `node_modules`、`.git`、`.cyberself`、`dist`、`build`、`lib`。`.doc` 不支持，先另存为 `.docx` 或 PDF。
 
 ### 2. 结构化整理（自动）
 
@@ -154,6 +134,7 @@ Desktop 里切换到 `kb` profile 即可。
 ## 面板功能
 
 - 统计：几份资料、几段、已向量化几段、占用大小。
+- 导入：上传文件，或填一个目录路径，扫描后先看数量、体积和图片张数，再决定是否导入。
 - 文档列表：点开一份能看到每一段的原文、页码、小节标题，可以单独删除。
 - 检索框：只查资料库，不调用模型。
 - 操作：向量化全部、清空资料、删除数据。
@@ -191,7 +172,7 @@ Desktop 里切换到 `kb` profile 即可。
 | 每块字符上限 | 0 表示整块送入；设小可以加快向量化，代价是每块后半段不参与语义匹配 |
 | 表格分块去重 | 打开后，Excel 和 CSV 里只有数字不同的行共用一个向量 |
 
-改动模型、每块字符上限或去重开关，会清空已有向量并在后台重新生成。设置保存在 `$DSH_HOME/cyberself/settings.json`。
+改动模型、每块字符上限或去重开关，会清空已有向量并在后台重新生成。保存之前先探测新的嵌入服务，连不上或者模型没装，设置不会保存，向量也不会被清掉。设置保存在 `$DSH_HOME/cyberself/settings.json`。
 
 其余参数（分块长度、每次检索几条、回答温度等）写在 profile 的 `cordis.patch.yml` 里，全部字段和默认值见 `src/host/config.ts`：
 
@@ -213,14 +194,22 @@ Desktop 里切换到 `kb` profile 即可。
 | 资料库标记与回答范围 | `<工作区>/.cyberself/config.json` |
 | 嵌入服务设置 | `$DSH_HOME/cyberself/settings.json` |
 
+资料库目录就在工作区里面，所以如果你会把这个工作区提交到 Git，记得把它加进自己的 `.gitignore`：
+
+```
+.cyberself/
+```
+
 ## 开发
 
 ```bash
 pnpm install
 pnpm build      # 生成 lib/index.js 与 lib/client.js
 pnpm typecheck
-pnpm test       # node:test，94 个用例
+pnpm test       # node:test，94 个用例，需要本机 Ollama 与 bge-m3
 ```
+
+`lib/` 跟着源码一起提交，安装侧不会执行构建。改完 `src/` 记得重新 `pnpm build` 再提交，CI 会检查 `lib/` 与源码是否一致。
 
 | 目录 | 内容 |
 | --- | --- |
@@ -234,6 +223,7 @@ pnpm test       # node:test，94 个用例
 
 - `.doc` 不支持。
 - 扫描件和图片依赖能看图的模型，模型不支持图片时导入会失败。
+- 扫描版 PDF 的页面要渲染成图片，依赖 `@napi-rs/canvas` 的预编译包；平台没有预编译包时，这类页面会报错并说明原因，文字版 PDF 不受影响。
 - 向量检索在 JavaScript 里逐块计算，耗时随分块数量线性增长，1 万段约 0.8 秒。
 - Word 转出来的分块可能比章节更碎，检索粒度比 Markdown 差一些。
 - 一个工作区一个库，没有跨身份检索。

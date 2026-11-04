@@ -150,8 +150,16 @@ export interface ImportView {
   note: string | null
 }
 
-/** Body of an import request: a host path, or uploaded bytes as base64. */
-export interface ImportRequest {
+/** Files under one directory that the importer accepts, with the cost of importing them. */
+export interface ScanView {
+  files: string[]
+  skipped: string[]
+  totalBytes: number
+  /** How many of the files are read by the vision model. */
+  images: number
+}
+
+/** Body of an import request: a host path, or uploaded bytes as base64. */export interface ImportRequest {
   dir: string
   /** Absolute path on the Host; used when no upload payload is sent. */
   path?: string

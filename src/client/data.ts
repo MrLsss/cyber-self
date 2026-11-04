@@ -18,6 +18,7 @@ import {
   type LibraryView,
   type MarkView,
   type PurgeView,
+  type ScanView,
   type SearchView,
   type StorageView,
 } from '../shared/protocol.ts'
@@ -141,11 +142,6 @@ export async function importPath(
 }
 
 /** Files under one directory that the plugin can import. */
-export interface ScanView {
-  files: string[]
-  skipped: string[]
-}
-
 export async function scanDirectory(dir: string, path: string): Promise<ScanView> {
   return await postJson<ScanView>('scan', { dir, path })
 }

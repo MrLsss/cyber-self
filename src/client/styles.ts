@@ -46,6 +46,16 @@ const SHEET = `
 .cs-panel-title { font-weight: 600; font-size: 13px; }
 .cs-row { display: flex; align-items: center; gap: 8px; }
 .cs-row > *:first-child { flex: 1 1 auto; }
+.cs-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--dsw-alias-border-subtle, rgba(0, 0, 0, 0.08));
+  background: var(--dsw-alias-bg-subtle, rgba(0, 0, 0, 0.02));
+}
+.cs-confirm .cs-row > * { flex: none; }
 .cs-progress { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
 .cs-progress-track { height: 4px; border-radius: 2px; background: var(--dsw-alias-border-subtle, rgba(0, 0, 0, 0.1)); overflow: hidden; }
 .cs-progress-bar { height: 100%; background: var(--dsw-alias-accent, #4a6cf7); }

@@ -39,6 +39,14 @@ const PHASES: Record<Progress['phase'], string> = {
 /** Imports in flight at once; each one spends most of its time waiting on the model. */
 const IMPORT_CONCURRENCY = 3
 
+/** A scanned directory waiting for the user to accept the import. */
+interface PendingFolder {
+  files: string[]
+  skipped: string[]
+  totalBytes: number
+  images: number
+}
+
 async function importAll<T>(items: readonly T[], work: (item: T, index: number) => Promise<void>): Promise<void> {
   let next = 0
   const run = async (): Promise<void> => {
@@ -88,6 +96,7 @@ export function LibraryTabBody(props: SessionSeatProps): ReactElement | null {
   const [open, setOpen] = useState<DocumentDetail | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  const [pendingFolder, setPendingFolder] = useState<PendingFolder | null>(null)
   const picker = useRef<HTMLInputElement>(null)
   const running = view?.stats?.embedding.running === true
 
@@ -174,16 +183,38 @@ export function LibraryTabBody(props: SessionSeatProps): ReactElement | null {
   const importFolder = (): void => {
     const path = folder.trim()
     if (path === '') return
+    setBusy(true)
+    setError(null)
+    setNote(null)
+    scanDirectory(dir, path)
+      .then((scan) => {
+        if (scan.files.length === 0) {
+          setNote('该目录里没有可导入的文件')
+          return
+        }
+        setPendingFolder({ files: scan.files, skipped: scan.skipped, totalBytes: scan.totalBytes, images: scan.images })
+      })
+      .catch((reason: unknown) => {
+        setError(message(reason))
+      })
+      .finally(() => {
+        setBusy(false)
+      })
+  }
+
+  const importPendingFolder = (): void => {
+    const target = pendingFolder
+    if (target === null) return
+    setPendingFolder(null)
     void run(async () => {
-      const scan = await scanDirectory(dir, path)
-      if (scan.files.length === 0) return '该目录里没有可导入的文件'
-      await importAll(scan.files, async (file) => {
+      let imported = 0
+      await importAll(target.files, async (file) => {
         await importPath(dir, file, setProgress)
+        imported += 1
       })
       setFolder('')
-      return scan.skipped.length === 0
-        ? `已导入 ${scan.files.length} 个文件`
-        : `已导入 ${scan.files.length} 个文件，跳过 ${scan.skipped.length} 个不支持的文件`
+      const skipped = target.skipped.length === 0 ? '' : `，跳过 ${target.skipped.length} 个不支持的文件`
+      return `已导入 ${imported} 个文件${skipped}`
     })
   }
 
@@ -337,6 +368,20 @@ export function LibraryTabBody(props: SessionSeatProps): ReactElement | null {
         />
         <Button size="sm" variant="outline" disabled={busy} onClick={importFolder}>导入目录</Button>
       </div>
+
+      {pendingFolder === null ? null : (
+        <div className="cs-confirm">
+          <span className="cs-muted">
+            {`将导入 ${pendingFolder.files.length} 个文件，合计 ${formatSize(pendingFolder.totalBytes)}`}
+            {pendingFolder.images === 0 ? '' : `，其中 ${pendingFolder.images} 张图片要交给视觉模型转写`}
+            {pendingFolder.skipped.length === 0 ? '' : `，另有 ${pendingFolder.skipped.length} 个不支持的文件会跳过`}
+          </span>
+          <div className="cs-row">
+            <Button size="sm" variant="primary" disabled={busy} onClick={importPendingFolder}>确认导入</Button>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => { setPendingFolder(null) }}>取消</Button>
+          </div>
+        </div>
+      )}
 
       {progress === null && !running ? null : (
         <div className="cs-progress">

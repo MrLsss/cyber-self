@@ -9,6 +9,7 @@
  * @module cyberself/parse/pdf
  */
 import { extractText, renderPageAsImage } from 'unpdf'
+import { CyberSelfError } from '../../shared/protocol.ts'
 import { mapWithConcurrency } from './pool.ts'
 import { SCANNED_PAGE_THRESHOLD, type ParsedBlock, type ParseOptions } from './types.ts'
 
@@ -44,10 +45,17 @@ export async function parsePdf(bytes: Uint8Array, options: ParseOptions): Promis
     if (scanned.length < options.maxPages) scanned.push(pageNumber)
   })
 
-  const render = (pageNumber: number): Promise<ArrayBuffer> => renderPageAsImage(new Uint8Array(bytes), pageNumber, {
-    canvasImport: () => import('@napi-rs/canvas'),
-    scale: renderScale(options.pdfDpi),
-  })
+  const render = async (pageNumber: number): Promise<ArrayBuffer> => {
+    try {
+      return await renderPageAsImage(new Uint8Array(bytes), pageNumber, {
+        canvasImport: () => import('@napi-rs/canvas'),
+        scale: renderScale(options.pdfDpi),
+      })
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      throw new CyberSelfError(500, `PDF 第 ${pageNumber} 页没有文字层，需要渲染成图片再转写，但这一步失败了：${reason}`)
+    }
+  }
 
   if (vision !== null) {
     await mapWithConcurrency(scanned, options.concurrency, async (pageNumber) => {
