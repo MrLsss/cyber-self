@@ -41,7 +41,12 @@ jobs:
           done
           ollama pull bge-m3
 
-      - run: pnpm test
+      # Two cases send a real prompt to a chat model through the gateway the
+      # test suite expects on 127.0.0.1:3425. CI has no such gateway, so they
+      # are excluded here and run on a developer machine with pnpm test.
+      - name: Test
+        run: node --test --test-reporter=spec --test-skip-pattern='an answer cites|asking streams' "test/**/*.test.ts"
+
       - run: pnpm build
 
       - name: lib matches src
