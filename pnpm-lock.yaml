@@ -20,9 +20,6 @@ importers:
       unpdf:
         specifier: ^1.4.0
         version: 1.9.1(@napi-rs/canvas@1.1.0)
-      xlsx:
-        specifier: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
-        version: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: ~4.0.5
@@ -123,6 +120,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      xlsx:
+        specifier: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+        version: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
     optionalDependencies:
       '@napi-rs/canvas':
         specifier: ^1.1.0

@@ -47,8 +47,7 @@
     "cheerio": "^1.1.2",
     "domhandler": "^5.0.3",
     "mammoth": "^1.11.0",
-    "unpdf": "^1.4.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "unpdf": "^1.4.0"
   },
   "optionalDependencies": {
     "@napi-rs/canvas": "^1.1.0"
@@ -86,7 +85,8 @@
     "react": "^18.3.1",
     "react-dom": "18.3.1",
     "tsdown": "^0.15.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.5",

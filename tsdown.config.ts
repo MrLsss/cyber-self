@@ -37,7 +37,6 @@ export default defineConfig([
       'domhandler',
       'mammoth',
       'unpdf',
-      'xlsx',
       '@napi-rs/canvas',
     ],
   },
